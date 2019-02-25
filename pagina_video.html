@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Video Equilibrio</title>
+	<style>
+
+		@font-face {
+		    font-family: 'AvenirLTStdBook';
+		    src: url('./fonts/AvenirLTStd-Book.otf');
+		}
+		@font-face {
+		    font-family: 'AvenirLTStdLight';
+		    src: url('./fonts/AvenirLTStd-Light.otf');
+		}
+		@font-face {
+		    font-family: 'AvenirLTStdHeavy';
+		    src: url('./fonts/AvenirLTStd-Heavy.otf');
+		}
+
+		body{
+			background-color: black;
+			margin: 0px;
+		}
+
+		.viewShown{
+			display: block !important;
+		}
+
+		.viewEquilibrio{
+			position: absolute;
+			display: none;
+			width: 100vw;
+			height: 100vh;
+		}
+
+		.viewRiscatto{
+			position: absolute;
+			display: none;
+			width: 100vw;
+			height: 100vh;
+		}
+
+		.viewPerfezione{
+			position: absolute;
+			display: none;
+			width: 100vw;
+			height: 100vh;
+		}
+
+		#logo{
+			position: absolute;
+			top: 40%;
+			left: 50%;
+			transform: translate(-50%,-50%);
+		}
+
+		#text_area{
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%,-50%);
+			text-align: center;
+    		font-family: 'AvenirLTStdBook', sans-serif;
+    		font-size: 25px;
+    		color: #dfd4ca;
+		}
+	</style>
+</head>
+<body>
+	<!-- Video EQUILIBRIO CELESTE -->
+	<div class="viewEquilibrio">
+		<video id="videoEquilibrio" width="1366" height="768">
+		  <source src="./video/video-equilibrio.mp4" type="video/mp4">Your browser does not support the video tag.
+		</video>
+	</div>
+	<!-- Video ETERNO RISCATTO -->
+	<div class="viewRiscatto">
+		<video id="videoRiscatto" width="1366" height="768">
+		  <source src="./video/video-riscatto.mp4" type="video/mp4">Your browser does not support the video tag.
+		</video>
+	</div>
+	<!-- Video SUBLIME PERFEZIONE -->
+	<div class="viewPerfezione">
+		<video id="videoPerfezione" width="1366" height="768">
+		  <source src="./video/video-perfezione.mp4" type="video/mp4">Your browser does not support the video tag.
+		</video>
+	</div>
+	<script src="./jquery.js"></script>
+	<script src="./paho-mqtt.js"></script>
+	<script>
+
+		function playEquilibrio(){
+			$('.viewEquilibrio').addClass('viewShown')
+
+			fetch('./video/video-equilibrio.mp4')
+		    .then(response => response.blob())
+		    .then(blob => {
+		      return $('#videoEquilibrio')[0].play();
+		    })
+		    .then(_ => {
+		      // Video playback started ;)
+		      console.log('playback started')
+		      $('#videoEquilibrio')[0].onended = function(){
+					console.log('fine equilibrio')
+					$('.viewEquilibrio').removeClass('viewShown');
+					sendMessage(clientId, 'fine-video')
+					window.location.href = './a.html';
+				};
+		    })
+		    .catch(e => {
+		      // Video playback failed ;(
+		    })
+		}
+
+		function playRiscatto(){
+			$('.viewRiscatto').addClass('viewShown')
+
+			fetch('./video/video-riscatto.mp4')
+		    .then(response => response.blob())
+		    .then(blob => {
+		      return $('#videoRiscatto')[0].play();
+		    })
+		    .then(_ => {
+		      // Video playback started ;)
+		      console.log('playback started')
+		      $('#videoRiscatto')[0].onended = function(){
+					console.log('fine riscatto')
+					$('.viewRiscatto').removeClass('viewShown');
+					sendMessage(clientId, 'fine-video')
+					window.location.href = './a.html';
+				};
+		    })
+		    .catch(e => {
+		      // Video playback failed ;(
+		    })
+		}
+
+		function playPerfezione(){
+			$('.viewPerfezione').addClass('viewShown')
+
+			fetch('./video/video-perfezione.mp4')
+		    .then(response => response.blob())
+		    .then(blob => {
+		      return $('#videoPerfezione')[0].play();
+		    })
+		    .then(_ => {
+		      // Video playback started ;)
+		      console.log('playback started')
+		      $('#videoPerfezione')[0].onended = function(){
+					console.log('fine perfezione')
+					$('.viewPerfezione').removeClass('viewShown');
+					sendMessage(clientId, 'fine-video')
+					window.location.href = './a.html';
+				};
+		    })
+		    .catch(e => {
+		      // Video playback failed ;(
+		    })
+		}
+
+		function onConnect() {
+			console.log('connected')
+			client.subscribe('caronte_tablet');
+
+			switch( sessionStorage.getItem('video') ){
+				default:
+				break;
+
+				case 'equilibrio':
+					playEquilibrio()
+				break;
+
+				case 'eterno':
+					playRiscatto()
+				break;
+
+				case 'sublime':
+					playPerfezione()
+				break;
+			}
+		}
+
+		function doFail( error ) {
+			console.log('fail connect')
+		}
+
+		function onMessageDelivered(){
+			console.log('messaggio inviato')
+		}
+
+		function sendMessage(clientId, message) {
+
+			if( !client.isConnected() )
+					return;
+
+			var preparedMessage = null;
+			preparedMessage = '~';
+			preparedMessage += '^'+clientId;
+			preparedMessage += '^'+message;
+
+			var messaggio = new Paho.Message(message);
+			messaggio.destinationName = canale;
+			client.send(messaggio);
+
+		}
+
+		$(document).ready(function(){
+
+			// parameters MQTT
+			host = 'm24.cloudmqtt.com';
+			user = 'txyosdvw';
+			psw = 'fM6R-UZSkeN3';
+			port = 38333;
+			canale = 'caronte_tablet';
+			clientId = 'pc';
+
+			client = new Paho.Client(host, port, "/ws", clientId);
+    		//client.onMessageArrived = arrivoMessaggio;
+    		client.onMessageDelivered = onMessageDelivered;
+    		var options = {
+    			userName: user,
+    			password: psw,
+    			onSuccess: onConnect,
+    			onFailure: doFail,
+    			useSSL: true,
+    		}
+    		client.connect(options);
+		})
+	</script>
+</body>
+</html>

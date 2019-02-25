@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style>
+
+		@font-face {
+		    font-family: 'AvenirLTStdBook';
+		    src: url('./fonts/AvenirLTStd-Book.otf');
+		}
+		@font-face {
+		    font-family: 'AvenirLTStdLight';
+		    src: url('./fonts/AvenirLTStd-Light.otf');
+		}
+		@font-face {
+		    font-family: 'AvenirLTStdHeavy';
+		    src: url('./fonts/AvenirLTStd-Heavy.otf');
+		}
+
+		body{
+			background-color: #3d3d3d;
+		}
+
+		.viewShown{
+			display: block !important;
+		}
+
+		#logo{
+			position: absolute;
+			top: 40%;
+			left: 50%;
+			transform: translate(-50%,-50%);
+		}
+
+		#text_area{
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%,-50%);
+			text-align: center;
+    		font-family: 'AvenirLTStdBook', sans-serif;
+    		font-size: 25px;
+    		color: #dfd4ca;
+		}
+
+		.whiteFlash{
+			position: absolute;
+			display: none;
+			width: 100vw;
+			height: 100vh;
+			background-color: white;
+			z-index: 9999;
+		}
+	</style>
+</head>
+<body>
+	<!-- White Flash -->
+	<div class="whiteFlash"></div>
+	<img id="logo" src="./img/logo.png" alt="logo caronte"/>
+	<p id="text_area"></p>
+	<script src="./jquery.js"></script>
+	<script src="./paho-mqtt.js"></script>
+	<script>
+
+		function showWhiteFlash( video ){
+			$('.whiteFlash').fadeIn(1000, function(){
+				sessionStorage.setItem('video', video);
+				window.location.href = './pagina_video.html';
+			});
+			/*$('.whiteFlash').addClass('viewShown')
+			setTimeout(function(){
+				window.location.href = './pagina_video.html';
+			}, 500)*/
+		}
+
+		// parameters MQTT
+		var host = 'm24.cloudmqtt.com';
+		var user = 'txyosdvw';
+		var psw = 'fM6R-UZSkeN3';
+		var port = 38333;
+		var canale = 'caronte_tablet';
+		var clientId = 'pc';
+
+		function onConnect() {
+			console.log('connected')
+			client.subscribe(canale);
+		}
+
+		function doFail( error ) {
+			console.log('fail connect')
+		}
+
+		function updateTextArea(text){
+			$('#text_area').text(text)
+		}
+
+		function arrivoMessaggio( receivedMessage ) {
+
+			switch( receivedMessage.payloadString ){
+				case 'tablet-index':
+					console.log('index.html')
+					updateTextArea('INDEX')
+				break;
+
+				case 'tablet-test':
+					console.log('test.html')
+					updateTextArea('TEST')
+				break;
+
+				case 'video-sublime':
+					showWhiteFlash( 'sublime' )
+				break;
+
+				case 'video-eterno':
+					showWhiteFlash( 'eterno' )
+				break;
+
+				case 'video-equilibrio':
+					showWhiteFlash( 'equilibrio' )
+				break;
+
+				default:
+					console.log(receivedMessage.payloadString)
+					updateTextArea('')
+				break;
+			}
+		}
+
+		$(document).ready(function(){
+			client = new Paho.Client(host, port, "/ws", clientId);
+    		client.onMessageArrived = arrivoMessaggio;
+    		//client.onMessageDelivered = onMessageDelivered;
+    		var options = {
+    			userName: user,
+    			password: psw,
+    			onSuccess: onConnect,
+    			onFailure: doFail,
+    			useSSL: true,
+    		}
+    		client.connect(options);
+    		console.log(client)
+		})
+	</script>
+</body>
+</html>
